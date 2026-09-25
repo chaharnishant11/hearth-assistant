@@ -1,0 +1,317 @@
+@import "tailwindcss";
+
+/* Palette and type taken from usefest.com */
+:root {
+  --cream: #f2f8d5;
+  --sage: #e7eed6;
+  --mint: #d9f5b8;
+  --lime: #efff9f;
+  --coral: #f6b2a6;
+  --teal: #87b3b5;
+  --stone: #c4c0b2;
+  --ink: #0a0c0b;
+  --muted: #757070;
+  --alert: #d64444;
+  --card: #fbfdf0;
+}
+
+@theme inline {
+  --color-cream: var(--cream);
+  --color-sage: var(--sage);
+  --color-mint: var(--mint);
+  --color-lime: var(--lime);
+  --color-coral: var(--coral);
+  --color-teal: var(--teal);
+  --color-stone: var(--stone);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-alert: var(--alert);
+  --color-card: var(--card);
+  --font-display: var(--font-bricolage);
+  --font-heading: var(--font-outfit);
+  --font-sans: var(--font-manrope);
+}
+
+html,
+body {
+  background: var(--cream);
+  color: var(--ink);
+}
+
+body {
+  font-family: var(--font-manrope), system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-bricolage), system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.font-heading {
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+}
+
+.pill {
+  border-radius: 9999px;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.animate-breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+.animate-breathe-slow {
+  animation: breathe 8s ease-in-out infinite;
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 1.8s ease-out infinite;
+}
+
+/* Homepage hero: Margaret's call plays out at speaking pace, then her words become Nour's alert. */
+@keyframes caption-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes mark-in {
+  to {
+    background-size: 100% 42%;
+  }
+}
+
+@keyframes alert-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.hero-line {
+  opacity: 0;
+  animation: caption-in 0.6s ease-out forwards;
+}
+
+.hero-mark {
+  background-image: linear-gradient(var(--coral), var(--coral));
+  background-repeat: no-repeat;
+  background-position: 0 88%;
+  background-size: 0% 42%;
+  animation: mark-in 0.9s ease-out forwards;
+}
+
+.hero-alert {
+  opacity: 0;
+  animation: alert-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-line,
+  .hero-alert {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .hero-mark {
+    animation: none;
+    background-size: 100% 42%;
+  }
+}
+
+:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* Homepage motion graphics */
+@property --n {
+  syntax: "<integer>";
+  initial-value: 0;
+  inherits: false;
+}
+
+@keyframes count-to {
+  to {
+    --n: var(--to);
+  }
+}
+
+/* Numbers count up as they scroll into view (falls back to counting on load). */
+.count-up {
+  counter-reset: n var(--n);
+  animation: count-to 2s ease-out both;
+  animation-timeline: view();
+  animation-range: entry 10% cover 40%;
+}
+.count-up::before {
+  content: counter(n);
+}
+
+@keyframes fade-person {
+  to {
+    opacity: 0.22;
+  }
+}
+.person-fade {
+  animation: fade-person 0.8s ease-out both;
+  animation-timeline: view();
+  animation-range: entry 30% cover 45%;
+}
+
+@keyframes eq {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+.eq-bar {
+  transform-origin: center;
+  animation: eq 1.1s ease-in-out infinite;
+}
+
+@keyframes ring-out {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+.ring-out {
+  animation: ring-out 2.4s ease-out infinite;
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+.drift {
+  animation: drift 4.5s ease-in-out infinite;
+}
+
+@keyframes draw {
+  from {
+    stroke-dashoffset: 320;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.draw-line {
+  stroke-dasharray: 320;
+  animation: draw 2.4s ease-out 0.3s both infinite alternate;
+}
+
+@keyframes pop {
+  0%,
+  45% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.pop-in {
+  animation: pop 4.8s ease-out infinite alternate;
+}
+
+@keyframes caption-cycle {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  6%,
+  30% {
+    opacity: 1;
+    transform: none;
+  }
+  36%,
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+.caption-cycle {
+  grid-area: 1 / 1;
+  opacity: 0;
+  animation: caption-cycle 10.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .count-up {
+    animation: none;
+    counter-reset: n var(--to);
+  }
+  .person-fade {
+    animation: none;
+    opacity: 0.22;
+  }
+  .eq-bar,
+  .ring-out,
+  .drift,
+  .draw-line,
+  .pop-in,
+  .animate-breathe,
+  .animate-breathe-slow,
+  .animate-pulse-ring {
+    animation: none;
+  }
+  .draw-line {
+    stroke-dashoffset: 0;
+  }
+  .caption-cycle {
+    animation: none;
+    opacity: 0;
+  }
+  .caption-cycle:first-child {
+    opacity: 1;
+  }
+}
