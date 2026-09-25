@@ -1,3 +1,4 @@
+import { baselineWpm } from "@/lib/defaults";
 import { pronounsFor } from "@/lib/profile";
 import type { ReactNode } from "react";
 import type { CheckIn, Profile } from "@/lib/types";
@@ -138,8 +139,6 @@ function TrendCard({
   );
 }
 
-const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
-
 export function Trends({ checkins, profile }: { checkins: CheckIn[]; profile: Profile }) {
   const days = checkins.slice(-7);
   if (days.length === 0) return null;
@@ -149,32 +148,34 @@ export function Trends({ checkins, profile }: { checkins: CheckIn[]; profile: Pr
   const latestKey = latest.id;
 
   const mood = days.map((c) => c.mood);
-  const sleep = days.map((c) => c.wearable.sleepHours);
   const wpm = days.map((c) => c.speech.wordsPerMinute);
   const people = days.map((c) => c.peopleMentioned.length);
 
-  const earlierSleep = avg(sleep.slice(0, -1));
-  const pacePct = Math.round(
-    ((latest.speech.wordsPerMinute - profile.baselineWpm) / profile.baselineWpm) * 100,
-  );
+  // "Normal" is learned from their own earlier calls, never assumed.
+  const baseline = baselineWpm(checkins.slice(0, -1));
+  const pacePct = baseline ? Math.round(((latest.speech.wordsPerMinute - baseline) / baseline) * 100) : 0;
   const { their } = pronounsFor(profile.relation);
-  const paceNote = `${pacePct < 0 ? "−" : "+"}${Math.abs(pacePct)}% vs ${their} normal`;
+  const paceNote = baseline
+    ? `${pacePct < 0 ? "−" : "+"}${Math.abs(pacePct)}% vs ${their} normal`
+    : `learning ${their} normal`;
   const peopleFalling =
     people.length > 1 && people[people.length - 1] < Math.max(...people.slice(0, -1));
 
-  const wMin = Math.min(...wpm, profile.baselineWpm) - 6;
-  const wMax = Math.max(...wpm, profile.baselineWpm) + 6;
+  const wMin = Math.min(...wpm, baseline ?? Infinity) - 6;
+  const wMax = Math.max(...wpm, baseline ?? -Infinity) + 6;
 
   return (
     <section>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="font-display text-4xl leading-none sm:text-5xl">the last {days.length} days</h2>
+        <h2 className="font-display text-4xl leading-none sm:text-5xl">
+          {days.length === 1 ? "the first call" : `the last ${days.length} calls`}
+        </h2>
         <p className="text-sm text-muted">
           Slow changes are easy to miss on a phone call. Hearth notices them.
         </p>
       </div>
 
-      <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <TrendCard
           title="Mood"
           headline={`${latest.mood}/5`}
@@ -186,32 +187,15 @@ export function Trends({ checkins, profile }: { checkins: CheckIn[]; profile: Pr
         </TrendCard>
 
         <TrendCard
-          title="Sleep"
-          headline={`${latest.wearable.sleepHours}h`}
-          note={
-            days.length > 1
-              ? `avg ${earlierSleep.toFixed(1)}h before`
-              : undefined
-          }
-          noteTone={latest.wearable.sleepHours < 5 ? "warn" : "muted"}
-          caption="simulated watch data"
-        >
-          <Chart
-            values={sleep}
-            labels={labels}
-            min={Math.min(3, Math.min(...sleep) - 0.5)}
-            max={Math.max(8, Math.max(...sleep) + 0.5)}
-            format={(v) => `${v}h`}
-            latestKey={latestKey}
-          />
-        </TrendCard>
-
-        <TrendCard
           title="Speaking pace"
           headline={`${latest.speech.wordsPerMinute} wpm`}
           note={paceNote}
           noteTone={pacePct <= -5 ? "warn" : "muted"}
-          caption="Slower speech can be an early sign of tiredness or low mood."
+          caption={
+            baseline
+              ? "Slower speech can be an early sign of tiredness or low mood."
+              : "Hearth learns their usual pace after a couple of calls."
+          }
         >
           <Chart
             values={wpm}
@@ -220,7 +204,7 @@ export function Trends({ checkins, profile }: { checkins: CheckIn[]; profile: Pr
             max={wMax}
             format={(v) => `${v}`}
             latestKey={latestKey}
-            baseline={{ value: profile.baselineWpm, label: `${their} normal · ${profile.baselineWpm}` }}
+            baseline={baseline ? { value: baseline, label: `${their} normal: ${baseline}` } : undefined}
           />
         </TrendCard>
 

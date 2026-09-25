@@ -25,13 +25,6 @@ export interface TranscriptLine {
   text: string;
 }
 
-/** Simulated smartwatch data (clearly labelled as simulated in the UI). */
-export interface Wearable {
-  sleepHours: number;
-  restingHr: number;
-  steps: number;
-}
-
 export interface SpeechMetrics {
   wordsPerMinute: number;
   fillerPer100: number;
@@ -40,7 +33,7 @@ export interface SpeechMetrics {
 export interface CheckIn {
   id: string;
   date: string; // YYYY-MM-DD
-  dayLabel: string; // "Mon"
+  dayLabel: string; // "Fri 25"
   durationSec: number;
   mood: number; // 1 (very low) – 5 (very good)
   moodLabel: string;
@@ -53,7 +46,6 @@ export interface CheckIn {
   suggestedAction: string;
   memoryNotes: string[];
   urgent: boolean;
-  wearable: Wearable;
   speech: SpeechMetrics;
   transcript: TranscriptLine[];
   live?: boolean; // produced from a real call in this session
@@ -80,7 +72,6 @@ export interface Profile {
   caregiverCity: string;
   emergencyNumber: string;
   crisisLine: { name: string; number: string };
-  baselineWpm: number;
   about: string[];
 }
 
@@ -96,19 +87,61 @@ export interface Reflection {
   safetyConcern: boolean;
 }
 
-/** What a self-use companion remembers about its user between calls. */
-export interface PersonalMemory {
-  userName: string;
-  notes: string[];
-  sessions: { at: string; title: string; reflection: string }[];
+export type MemoryCategory =
+  | "people"
+  | "health"
+  | "feelings"
+  | "routine"
+  | "life"
+  | "preferences"
+  | "language";
+
+/** One durable thing Hearth knows about a person. */
+export interface MemoryFact {
+  id: string;
+  text: string;
+  category: MemoryCategory;
+  /** Companion whose conversation this came from. */
+  source: string;
+  /** Learned in a private companion, so never shared with family. */
+  private: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FollowUp {
+  text: string;
+  private: boolean;
+}
+
+/** One past call with any companion. */
+export interface Conversation {
+  id: string;
+  companionId: string;
+  at: string; // ISO timestamp
+  durationSec: number;
+  title: string;
+  summary: string;
+  quote: string;
+  urgent: boolean;
+  transcript: TranscriptLine[];
+  sample?: boolean;
+}
+
+/** Everything Hearth remembers about one person, shared across all companions. */
+export interface Person {
+  id: string;
+  name: string;
+  summary: string;
+  facts: MemoryFact[];
+  followUps: FollowUp[];
+  conversations: Conversation[];
 }
 
 export interface HearthState {
-  /** Self-use companions' memory, keyed by companion id. */
-  personal: Record<string, PersonalMemory>;
   profile: Profile;
-  /** Whether the dashboard starts with the sample week of history. */
-  sampleHistory: boolean;
+  /** False until the family has filled in the setup page. */
+  configured: boolean;
   checkins: CheckIn[];
   liveAlerts: LiveAlert[];
   callActive: boolean;

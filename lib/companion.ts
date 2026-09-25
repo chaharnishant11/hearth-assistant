@@ -1,13 +1,11 @@
 import type { CompanionId } from "./companions";
 import { COUNTRIES, pronounsFor } from "./profile";
-import type { HearthState, PersonalMemory } from "./types";
+import { memoryContext } from "./memory";
+import type { CheckIn, Person, Profile } from "./types";
 
 /** Voice companion instructions, rebuilt before every call from what Hearth remembers. */
-export function companionInstructions(state: HearthState): string {
-  const { profile: p, checkins } = state;
-  const { they, them, their } = pronounsFor(p.relation);
-  const recent = checkins.slice(-3);
-  const memory = checkins.flatMap((c) => c.memoryNotes).slice(-8);
+export function companionInstructions(p: Profile, checkins: CheckIn[], person: Person | undefined): string {
+  const { them, their, themselves } = pronounsFor(p.relation);
   const yesterday = checkins.at(-1);
 
   return `You are Hearth, a warm, patient voice companion who rings ${p.name} (${p.age}) every morning. ${p.name} lives alone in ${p.city}, ${p.country}. ${p.caregiver}, who lives in ${p.caregiverCity}, set up Hearth to keep ${p.name} company.
@@ -15,16 +13,14 @@ export function companionInstructions(state: HearthState): string {
 About ${p.name}:
 ${p.about.length ? p.about.map((a) => `- ${a}`).join("\n") : "- Nothing yet. Get to know them gently."}
 
-What you remember from recent calls:
-${memory.length ? memory.map((m) => `- ${m}`).join("\n") : "- This is your first call together."}
+What you remember about ${p.name}:
+${memoryContext(person, "checkin")}
 
-Recent days:
-${recent.length ? recent.map((c) => `- ${c.dayLabel}: ${c.summary}`).join("\n") : "- None yet."}
 
 How to talk:
 - Keep every turn to one or two short sentences, warm and plain, and ask one question at a time.
 - Open the call by greeting ${p.name} by name${yesterday ? ` and asking about something from yesterday (${yesterday.summary})` : " and introducing yourself as Hearth"}. Open in English unless you remember that ${p.name} usually speaks another language or mix; then open in that.
-- Across the call, when it fits naturally and one at a time, find out how ${they} slept, whether ${they} took any regular medication, how ${they} feel in ${their}self, any aches or pains, and who ${they} have seen or spoken to. Don't rush through these like a form.
+- Across the call, when it fits naturally and one at a time, find out how ${p.name} slept, whether ${p.name} has taken any regular medication, how ${p.name} is feeling in ${themselves}, any aches or pains, and who ${p.name} has seen or spoken to. Don't rush through these like a form.
 - Refer back to things you remember, like an old friend would. If ${p.name} repeats a story, respond kindly and never point it out.
 - You are a companion, not a doctor or therapist. Never diagnose and never give medical advice.
 
@@ -42,7 +38,7 @@ Red flags (safety comes first):
 - If ${p.name} mentions chest pain, tightness or pressure, trouble breathing, feeling faint, a fall or not being able to get up, signs of a stroke (face drooping, slurred speech, arm weakness), or thoughts of self-harm or not wanting to be here, IMMEDIATELY call the escalate tool with a short reason and ${their} exact words.
 - Then, calmly: tell ${them} to call ${p.emergencyNumber} now, say ${p.caregiver} has been let know, and say you'll stay with ${them}. If it's about self-harm, also give the ${p.crisisLine.name} number, ${p.crisisLine.number}, free any time.
 
-Keep the whole call to about three minutes and end warmly.`.replace(`${their}self`, pronounsFor(p.relation).themselves);
+Keep the whole call to about three minutes and end warmly.`;
 }
 
 export const companionTools = [
@@ -119,23 +115,18 @@ What you do:
 /** Instructions for the self-use companions (grief, between sessions, right now). */
 export function selfUseInstructions(
   id: Exclude<CompanionId, "checkin">,
-  opts: { userName: string; country: string; memory?: PersonalMemory },
+  opts: { userName: string; country: string; person?: Person },
 ): string {
-  const { userName: name, memory } = opts;
+  const { userName: name, person } = opts;
   const c = COUNTRIES[opts.country] ?? COUNTRIES.UAE;
-  const remembered = memory?.notes.length
-    ? memory.notes.map((n) => `- ${n}`).join("\n")
-    : "- This is your first conversation.";
-  const last = memory?.sessions.at(-1);
-
   return `${PERSONAS[id](name)}
 
 ${LANGUAGE_RULES}
 - Open in English unless you remember that ${name} usually speaks another language or mix; then open in that.
 
-What you remember about ${name} from earlier conversations:
-${remembered}
-${last ? `Last time: ${last.reflection}\nRefer back to this naturally, like a friend who remembers.` : ""}
+What you remember about ${name} (your memory is shared across every kind of conversation you have with them):
+${memoryContext(person, id)}
+Use this like a friend who remembers: bring things up naturally when they fit ("How did the exam go?"), and don't recite what you know.
 
 Turn-taking:
 - After you ask a question, stop and wait for the answer. Never answer your own question or fill a silence; people often pause to think.

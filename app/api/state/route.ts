@@ -1,33 +1,33 @@
 import { connection } from "next/server";
-import { addLiveAlert, getState, resetState, saveProfile, setCallStatus } from "@/lib/store";
+import { addLiveAlert, clearCheckIns, getDashboard, saveProfile, setCallStatus } from "@/lib/store";
 import type { Profile } from "@/lib/types";
 
 export async function GET() {
   await connection();
-  return Response.json(getState());
+  return Response.json(await getDashboard());
 }
 
 type Action =
   | { action: "reset" }
   | { action: "call"; callActive?: boolean; calmMode?: boolean }
   | { action: "alert"; reason: string; quote: string; translation?: string }
-  | { action: "profile"; profile: Profile; sampleHistory: boolean };
+  | { action: "profile"; profile: Profile };
 
 export async function POST(request: Request) {
   const body = (await request.json()) as Action;
 
   switch (body.action) {
     case "reset":
-      resetState();
+      await clearCheckIns();
       break;
     case "call":
-      setCallStatus({
+      await setCallStatus({
         ...(body.callActive !== undefined && { callActive: body.callActive }),
         ...(body.calmMode !== undefined && { calmMode: body.calmMode }),
       });
       break;
     case "alert":
-      addLiveAlert({
+      await addLiveAlert({
         id: crypto.randomUUID(),
         at: new Date().toISOString(),
         reason: body.reason,
@@ -36,11 +36,11 @@ export async function POST(request: Request) {
       });
       break;
     case "profile":
-      saveProfile(body.profile, body.sampleHistory);
+      await saveProfile(body.profile);
       break;
     default:
       return Response.json({ error: "Unknown action" }, { status: 400 });
   }
 
-  return Response.json(getState());
+  return Response.json(await getDashboard());
 }

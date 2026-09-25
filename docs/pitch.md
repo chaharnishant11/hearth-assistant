@@ -44,16 +44,16 @@ Demo tip: show the companion picker for ~10 seconds; don't demo the trauma compa
 
 ## 3-minute demo script
 1. (30s) Problem: one stat + the expat angle. "Nour is in Abu Dhabi. Her mum Margaret, 78, lives alone in Manchester."
-2. (30s) Open Nour's dashboard: a week of mood slipping, sleep falling (simulated watch data), speaking pace dropping, her world getting smaller since her friend Joan left.
-3. (60s) Open the call page and talk as Margaret. Hearth remembers yesterday's walk. Say something like: "I didn't sleep much. Did I tell you about Arthur's marrow? It won first prize at the allotment show." Then: "My chest feels a bit tight and I'm a bit dizzy."
+2. (30s) Open Nour's dashboard, built from your practice calls: mood, speaking pace against her own normal, people mentioned, and quote-backed signals. Then the memory page: what Hearth has learned and the calendar of calls.
+3. (60s) Open the call page and talk as the parent. Hearth remembers something from an earlier practice call. Mention a story you told before, then: "My chest feels a bit tight and I'm a bit dizzy."
    Calm mode switches on, the crisis card appears with 999, and Nour's dashboard shows a red alert during the call.
 4. (30s) Hang up. In ~15s the dashboard updates: urgent alert with her exact words, "repeated the marrow story she told on Tuesday", pace 20% below her normal, suggested next step for Nour.
 5. (30s) Business: $30–50/month paid by adult children; later home-care agencies and insurers. Roadmap: real phone calls, WhatsApp alerts, real wearable sync, clinical validation.
 
-Backup: if the mic or Wi-Fi fails, click "No microphone? Play the sample call" on the call page.
+Before pitching: fill in /setup, then do two or three real practice calls so the dashboard has real trends and the memory page has real facts. There is no scripted fallback any more, so test the mic and Wi-Fi first.
 
 ## Questions judges will ask
 - "Is it safe?" It never diagnoses. Red flags go straight to 999 and the family. Every signal is explainable.
 - "Isn't this surveillance?" The parent opts in and talks on their own terms; we only use what's said on the call. No phone monitoring, no camera.
 - "Why not just ChatGPT?" Memory across calls, proactive daily calls, the family loop, and explainable trend alerts.
-- "Is the watch data real?" Simulated in this demo; wearable sync is on the roadmap.
+- "Is any of this mock data?" No. Every check-in, trend, alert and memory comes from real calls. Wearable sync is on the roadmap.

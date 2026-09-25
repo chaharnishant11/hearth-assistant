@@ -1,6 +1,17 @@
+import Link from "next/link";
 import type { Reflection } from "@/lib/types";
 
-export function NoteCard({ note, name, onAgain }: { note: Reflection; name: string; onAgain: () => void }) {
+export function NoteCard({
+  note,
+  name,
+  memoryHref,
+  onAgain,
+}: {
+  note: Reflection;
+  name: string;
+  memoryHref: string;
+  onAgain: () => void;
+}) {
   return (
     <article className="w-full max-w-2xl rounded-3xl bg-card p-7 text-left shadow-sm sm:p-9">
       <p className="text-xs font-semibold uppercase tracking-widest text-muted">
@@ -56,9 +67,14 @@ export function NoteCard({ note, name, onAgain }: { note: Reflection; name: stri
         </p>
       )}
 
-      <button onClick={onAgain} className="mt-6 text-base font-semibold underline underline-offset-4">
-        Talk again
-      </button>
+      <div className="mt-6 flex flex-wrap items-center gap-5">
+        <Link href={memoryHref} className="pill bg-ink px-5 py-3 font-semibold text-cream">
+          See everything Hearth remembers
+        </Link>
+        <button onClick={onAgain} className="text-base font-semibold underline underline-offset-4">
+          Talk again
+        </button>
+      </div>
     </article>
   );
 }

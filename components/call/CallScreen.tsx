@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { getCompanion, guessCountry, type CompanionId } from "@/lib/companions";
 import { COUNTRIES } from "@/lib/profile";
-import { profile as defaultProfile, sampleTranscriptFor } from "@/lib/seed";
+import { blankProfile } from "@/lib/defaults";
 import type { HearthState, Profile, Reflection, SpeechMetrics, TranscriptLine } from "@/lib/types";
+import { personId } from "@/lib/people";
 import { NoteCard } from "./NoteCard";
 
 type Status = "idle" | "connecting" | "live" | "analyzing" | "done" | "error";
@@ -59,7 +60,8 @@ export function CallScreen({ companionId }: { companionId: CompanionId }) {
   // The daily check-in reports to family; the other companions are private to the caller.
   const isFamily = !companion.selfUse;
 
-  const [profile, setProfile] = useState<Profile>(defaultProfile);
+  const [profile, setProfile] = useState<Profile>(blankProfile);
+  const [configured, setConfigured] = useState(true);
   const [userName, setUserName] = useState("");
   const [country, setCountry] = useState("UAE");
   const [status, setStatus] = useState<Status>("idle");
@@ -103,7 +105,10 @@ export function CallScreen({ companionId }: { companionId: CompanionId }) {
       postState({ action: "call", callActive: false, calmMode: false });
       fetch("/api/state", { cache: "no-store" })
         .then((r) => r.json() as Promise<HearthState>)
-        .then((s) => setProfile(s.profile))
+        .then((s) => {
+          setProfile(s.profile);
+          setConfigured(s.configured);
+        })
         .catch(() => undefined);
     } else {
       setUserName(readLocal(NAME_KEY));
@@ -419,7 +424,7 @@ export function CallScreen({ companionId }: { companionId: CompanionId }) {
       : await fetch("/api/reflect", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ companion: companion.id, userName: userName.trim(), transcript }),
+          body: JSON.stringify({ companion: companion.id, userName: userName.trim(), transcript, durationSec }),
         });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -448,22 +453,12 @@ export function CallScreen({ companionId }: { companionId: CompanionId }) {
     await writeUp(transcript, durationSec, measureSpeech(linesRef.current, userSpeechMsRef.current, durationSec));
   }
 
-  async function playSample() {
-    setError("");
-    const sample = sampleTranscriptFor(profile);
-    setAllLines(sample.map((l, i) => ({ ...l, id: `sample-${i}` })));
-    const alert = { reason: "Chest tightness and dizziness", quote: "my chest feels a bit tight and I'm a bit dizzy" };
-    setCrisis(alert);
-    await postState({ action: "alert", ...alert });
-    await writeUp(sample, 214, { wordsPerMinute: 104, fillerPer100: 6.8 });
-  }
-
   const live = status === "live";
   const greeting = companion.greeting
     .replace("{name}", (displayName || "there").toLowerCase())
     .replace("hi there. ", "hi. ");
   const headline = {
-    idle: greeting,
+    idle: isFamily && !configured ? "who should hearth call?" : greeting,
     connecting: "ringing hearth…",
     live: calm ? "breathe in… and slowly out" : speaking ? "hearth is talking" : "i'm listening",
     analyzing: isFamily
@@ -513,9 +508,19 @@ export function CallScreen({ companionId }: { companionId: CompanionId }) {
               {profile.caregiver}&apos;s view →
             </Link>
           ) : (
-            <Link href="/companions" className="pill border border-ink/15 px-4 py-2 text-sm font-semibold hover:bg-sage">
-              All companions
-            </Link>
+            <>
+              {displayName && (
+                <Link
+                  href={`/memory?p=${encodeURIComponent(personId(displayName))}`}
+                  className="hidden text-sm text-muted underline-offset-4 hover:text-ink hover:underline sm:inline"
+                >
+                  Your memory
+                </Link>
+              )}
+              <Link href="/companions" className="pill border border-ink/15 px-4 py-2 text-sm font-semibold hover:bg-sage">
+                All companions
+              </Link>
+            </>
           )}
         </div>
       </header>
@@ -585,18 +590,20 @@ export function CallScreen({ companionId }: { companionId: CompanionId }) {
             >
               See what {profile.caregiver} sees →
             </Link>
-          ) : status === "done" ? null : (
+          ) : status === "done" ? null : isFamily && !configured ? (
+            <Link
+              href="/setup"
+              className="pill bg-lime px-12 py-6 text-2xl font-bold text-ink shadow-sm transition hover:scale-[1.03]"
+            >
+              Set up the daily check-in
+            </Link>
+          ) : (
             <button
               onClick={start}
               disabled={status === "connecting" || status === "analyzing"}
               className={`pill px-14 py-6 text-2xl font-bold text-ink shadow-sm transition hover:scale-[1.03] disabled:opacity-60 ${companion.accent}`}
             >
               {status === "connecting" ? "Connecting…" : status === "analyzing" ? "One moment…" : "Talk to Hearth"}
-            </button>
-          )}
-          {isFamily && (status === "idle" || status === "error") && (
-            <button onClick={playSample} className="text-sm text-muted underline underline-offset-4">
-              No microphone? Play the sample call
             </button>
           )}
           {crisis && !showCrisis && (
@@ -610,6 +617,7 @@ export function CallScreen({ companionId }: { companionId: CompanionId }) {
           <NoteCard
             note={note}
             name={displayName}
+            memoryHref={`/memory?p=${encodeURIComponent(personId(displayName))}`}
             onAgain={() => {
               setNote(null);
               setAllLines([]);

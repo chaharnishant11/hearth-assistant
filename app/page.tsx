@@ -43,6 +43,9 @@ export default function Home() {
           <Link href="/companions" className="hidden hover:underline hover:underline-offset-4 sm:inline">
             Companions
           </Link>
+          <Link href="/memory" className="hidden hover:underline hover:underline-offset-4 sm:inline">
+            Memory
+          </Link>
           <Link href="/dashboard" className="hidden hover:underline hover:underline-offset-4 sm:inline">
             Family dashboard
           </Link>

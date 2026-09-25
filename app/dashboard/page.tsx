@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { HearthState } from "@/lib/types";
 import { Header } from "@/components/dashboard/Header";
@@ -58,6 +59,7 @@ export default function DashboardPage() {
   }, [load]);
 
   const reset = useCallback(async () => {
+    if (!confirm("Clear every check-in and alert from this dashboard? This can't be undone.")) return;
     setResetting(true);
     try {
       const res = await fetch("/api/state", {
@@ -85,7 +87,23 @@ export default function DashboardPage() {
     );
   }
 
-  const { profile, checkins, liveAlerts, callActive, calmMode } = state;
+  const { profile, checkins, liveAlerts, callActive, calmMode, configured } = state;
+
+  if (!configured) {
+    return (
+      <main className="flex flex-1 items-center justify-center bg-cream p-8">
+        <div className="max-w-xl">
+          <p className="font-display text-5xl leading-[1.02]">set up the daily check-in first</p>
+          <p className="mt-4 text-lg text-ink/70">
+            Tell Hearth who it will be calling. This dashboard fills up from their real calls.
+          </p>
+          <Link href="/setup" className="pill mt-6 inline-block bg-lime px-6 py-3 text-lg font-bold">
+            Set up for your family
+          </Link>
+        </div>
+      </main>
+    );
+  }
   const latest = checkins[checkins.length - 1];
 
   return (
@@ -114,7 +132,15 @@ export default function DashboardPage() {
                 fresh={freshIds.has(latest.id)}
               />
             ) : (
-              <div className="rounded-3xl bg-card p-8 text-muted">No check-ins yet.</div>
+              <div className="rounded-3xl bg-card p-8">
+                <p className="font-heading text-2xl">No calls yet</p>
+                <p className="mt-2 text-muted">
+                  Everything here comes from {profile.name}&apos;s real calls with Hearth.
+                </p>
+                <Link href="/call?c=checkin" className="pill mt-5 inline-block bg-lime px-5 py-3 font-bold">
+                  Start {profile.name}&apos;s first call
+                </Link>
+              </div>
             )}
           </div>
           <div className="min-w-0 lg:col-span-7">
@@ -128,7 +154,7 @@ export default function DashboardPage() {
 
         <footer className="pb-4 text-center text-sm text-muted">
           Hearth never diagnoses. Signals are conversation-based observations for family, not
-          medical advice. Watch data is simulated in this demo.
+          medical advice.
         </footer>
       </div>
     </main>

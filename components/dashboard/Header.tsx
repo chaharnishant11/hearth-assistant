@@ -1,3 +1,4 @@
+import { personId } from "@/lib/people";
 import type { Profile } from "@/lib/types";
 
 export function Header({
@@ -49,6 +50,12 @@ export function Header({
         )}
         <div className="flex items-center gap-3 text-xs text-muted">
           {offline && <span>reconnecting…</span>}
+          <a
+            href={`/memory?p=${encodeURIComponent(personId(profile.name))}&view=family`}
+            className="underline-offset-4 hover:text-ink hover:underline"
+          >
+            Conversation history
+          </a>
           <a href="/setup" className="underline-offset-4 hover:text-ink hover:underline">
             Edit details
           </a>
@@ -58,7 +65,7 @@ export function Header({
             disabled={resetting}
             className="underline-offset-4 hover:text-ink hover:underline disabled:opacity-50"
           >
-            {resetting ? "Resetting…" : "Reset demo"}
+            {resetting ? "Clearing…" : "Clear check-ins"}
           </button>
         </div>
       </div>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { COUNTRIES, RELATIONS } from "@/lib/profile";
-import { profile as defaultProfile } from "@/lib/seed";
+import { blankProfile } from "@/lib/defaults";
 import type { HearthState, Profile } from "@/lib/types";
 
 const field =
@@ -11,9 +11,8 @@ const field =
 const label = "mb-1.5 block text-sm font-semibold text-ink/70";
 
 export default function SetupPage() {
-  const [profile, setProfile] = useState<Profile>(defaultProfile);
-  const [about, setAbout] = useState(defaultProfile.about.join("\n"));
-  const [sampleHistory, setSampleHistory] = useState(true);
+  const [profile, setProfile] = useState<Profile>(blankProfile);
+  const [about, setAbout] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -23,7 +22,6 @@ export default function SetupPage() {
       .then((s) => {
         setProfile(s.profile);
         setAbout(s.profile.about.join("\n"));
-        setSampleHistory(s.sampleHistory);
       })
       .catch(() => undefined);
   }, []);
@@ -53,7 +51,7 @@ export default function SetupPage() {
     await fetch("/api/state", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "profile", profile: next, sampleHistory }),
+      body: JSON.stringify({ action: "profile", profile: next }),
     });
     setProfile(next);
     setSaving(false);
@@ -82,7 +80,7 @@ export default function SetupPage() {
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label className={label} htmlFor="name">Their first name</label>
-              <input id="name" required className={field} value={profile.name}
+              <input id="name" required placeholder="e.g. Margaret" className={field} value={profile.name}
                 onChange={(e) => update("name", e.target.value)} />
             </div>
             <div>
@@ -94,12 +92,12 @@ export default function SetupPage() {
             </div>
             <div>
               <label className={label} htmlFor="age">Age</label>
-              <input id="age" type="number" min={40} max={110} required className={field} value={profile.age}
+              <input id="age" type="number" min={40} max={110} required placeholder="e.g. 78" className={field} value={profile.age || ""}
                 onChange={(e) => update("age", Number(e.target.value))} />
             </div>
             <div>
               <label className={label} htmlFor="city">City</label>
-              <input id="city" required className={field} value={profile.city}
+              <input id="city" required placeholder="e.g. Manchester" className={field} value={profile.city}
                 onChange={(e) => update("city", e.target.value)} />
             </div>
             <div>
@@ -127,6 +125,7 @@ export default function SetupPage() {
             <div className="sm:col-span-2">
               <label className={label} htmlFor="about">Things Hearth should know (one per line)</label>
               <textarea id="about" rows={6} className={field} value={about}
+                placeholder={"e.g. Widowed; her husband Arthur loved gardening\nLives with her cat, Biscuit\nTakes a blood pressure tablet every morning"}
                 onChange={(e) => { setSaved(false); setAbout(e.target.value); }} />
             </div>
           </div>
@@ -137,23 +136,15 @@ export default function SetupPage() {
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label className={label} htmlFor="caregiver">Your first name</label>
-              <input id="caregiver" required className={field} value={profile.caregiver}
+              <input id="caregiver" required placeholder="e.g. Nour" className={field} value={profile.caregiver}
                 onChange={(e) => update("caregiver", e.target.value)} />
             </div>
             <div>
               <label className={label} htmlFor="caregiverCity">Where you live</label>
-              <input id="caregiverCity" required className={field} value={profile.caregiverCity}
+              <input id="caregiverCity" required placeholder="e.g. Abu Dhabi" className={field} value={profile.caregiverCity}
                 onChange={(e) => update("caregiverCity", e.target.value)} />
             </div>
           </div>
-          <label className="flex items-start gap-3 text-base">
-            <input type="checkbox" className="mt-1 h-5 w-5 accent-[#0a0c0b]" checked={sampleHistory}
-              onChange={(e) => { setSaved(false); setSampleHistory(e.target.checked); }} />
-            <span>
-              Start with a sample week of calls, so the dashboard has history to show.
-              <span className="block text-sm text-muted">Turn this off to start completely fresh.</span>
-            </span>
-          </label>
         </section>
 
         <div className="flex flex-wrap items-center gap-4">

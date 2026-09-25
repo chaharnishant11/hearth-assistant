@@ -1,6 +1,6 @@
 import { companionInstructions, companionTools, selfUseInstructions } from "@/lib/companion";
 import { getCompanion } from "@/lib/companions";
-import { getPersonal, getState } from "@/lib/store";
+import { getDashboard, getPerson } from "@/lib/store";
 
 interface Body {
   companion?: string;
@@ -12,19 +12,23 @@ interface Body {
 export async function POST(request: Request) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    return Response.json({ error: "OPENAI_API_KEY is not set in .env.local" }, { status: 500 });
+    return Response.json({ error: "OPENAI_API_KEY is not set (add it to .env.local, or to the Vercel project for deployments)" }, { status: 500 });
   }
 
   const body = (await request.json().catch(() => ({}))) as Body;
   const companion = getCompanion(body.companion);
-  const instructions =
-    companion.id === "checkin"
-      ? companionInstructions(getState())
-      : selfUseInstructions(companion.id, {
-          userName: body.userName?.trim() || "friend",
-          country: body.country ?? "UAE",
-          memory: getPersonal(companion.id),
-        });
+  let instructions: string;
+  if (companion.id === "checkin") {
+    const { profile, checkins } = await getDashboard();
+    instructions = companionInstructions(profile, checkins, await getPerson(profile.name));
+  } else {
+    const userName = body.userName?.trim() || "friend";
+    instructions = selfUseInstructions(companion.id, {
+      userName,
+      country: body.country ?? "UAE",
+      person: await getPerson(userName),
+    });
+  }
 
   const res = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
     method: "POST",

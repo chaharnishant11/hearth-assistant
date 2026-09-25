@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { COMPANIONS } from "@/lib/companions";
-import { getState } from "@/lib/store";
+import { getProfile } from "@/lib/store";
 
 export default async function CompanionsPage() {
   await connection();
-  const { profile } = getState();
+  const { profile, configured } = await getProfile();
   const [checkin, ...selfUse] = COMPANIONS;
 
   return (
@@ -14,9 +14,14 @@ export default async function CompanionsPage() {
         <Link href="/" className="font-display text-3xl">
           hearth
         </Link>
-        <Link href="/setup" className="pill border border-ink/15 px-4 py-2 text-sm font-semibold hover:bg-sage">
-          Set up for your family
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/memory" className="text-sm font-semibold hover:underline hover:underline-offset-4">
+            Memory
+          </Link>
+          <Link href="/setup" className="pill border border-ink/15 px-4 py-2 text-sm font-semibold hover:bg-sage">
+            Set up for your family
+          </Link>
+        </div>
       </header>
 
       <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center gap-12 px-4 pb-16 sm:px-10">
@@ -38,18 +43,29 @@ export default async function CompanionsPage() {
             <p className="mt-3 text-lg text-ink/75">{checkin.summary}</p>
             <p className="mt-2 text-sm text-ink/60">{checkin.privacy}</p>
             <div className="mt-auto flex flex-wrap gap-3 pt-8">
-              <Link
-                href="/call?c=checkin"
-                className="pill bg-ink px-6 py-3.5 text-lg font-bold text-cream transition hover:scale-[1.02]"
-              >
-                Talk as {profile.name} →
-              </Link>
-              <Link
-                href="/dashboard"
-                className="pill bg-card px-6 py-3.5 text-lg font-semibold transition hover:scale-[1.02]"
-              >
-                {profile.caregiver}&apos;s dashboard
-              </Link>
+              {configured ? (
+                <>
+                  <Link
+                    href="/call?c=checkin"
+                    className="pill bg-ink px-6 py-3.5 text-lg font-bold text-cream transition hover:scale-[1.02]"
+                  >
+                    Talk as {profile.name} →
+                  </Link>
+                  <Link
+                    href="/dashboard"
+                    className="pill bg-card px-6 py-3.5 text-lg font-semibold transition hover:scale-[1.02]"
+                  >
+                    {profile.caregiver}&apos;s dashboard
+                  </Link>
+                </>
+              ) : (
+                <Link
+                  href="/setup"
+                  className="pill bg-ink px-6 py-3.5 text-lg font-bold text-cream transition hover:scale-[1.02]"
+                >
+                  Set up for your family →
+                </Link>
+              )}
             </div>
           </div>
 
